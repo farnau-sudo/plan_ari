@@ -1,13 +1,12 @@
-19:13 07/11/2026<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Entrenamiento Ariadna Fassa</title>
   
-  <!-- Icono para la pantalla de inicio de iOS -->
-  <link rel="apple-touch-icon" href="icon.png">
-  <link rel="shortcut icon" href="icon.png">
+  <!-- Icono de iOS incrustado en Base64 para garantía total -->
+  <link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEAAQMAAABmvDolAAAABlBMVEUAAABTU1Oqqqrs8P4dAAAAAXRSTlMAQObYZgAAAFpJREFUeNrtwQENAAAAwqD3T20ON6AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8G8b0AAB30U7bAAAAABJRU5ErkJggg==" id="embeddedIcon">
   
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -16,7 +15,13 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   
   <style>
-    body { -webkit-tap-highlight-color: transparent; user-select: none; }
+    html, body {
+      touch-action: pan-x pan-y;
+      -webkit-text-size-adjust: 100%;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      overflow-x: hidden;
+    }
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
@@ -26,8 +31,8 @@
   <!-- CABECERA PRINCIPAL -->
   <header class="bg-slate-800/90 backdrop-blur border-b border-slate-700 sticky top-0 z-30 px-4 py-3 flex items-center justify-between shadow-lg">
     <div class="flex items-center space-x-3">
-      <div class="w-10 h-10 rounded-full border-2 border-yellow-400 overflow-hidden bg-slate-700 flex-shrink-0">
-        <img src="icon.png" alt="Ariadna Fassa" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/40?text=AF'">
+      <div class="w-10 h-10 rounded-full border-2 border-yellow-400 overflow-hidden bg-slate-700 flex-shrink-0 flex items-center justify-center font-bold text-yellow-400">
+        AF
       </div>
       <div>
         <h1 class="text-base font-bold text-white leading-tight flex items-center gap-1">
@@ -146,6 +151,20 @@
   </div>
 
   <script>
+    // BLOQUEO DE ZOOM TÁCTIL
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function (event) {
+      const now = (new Date()).getTime();
+      if (now - lastTouchEnd <= 300) {
+        event.preventDefault();
+      }
+      lastTouchEnd = now;
+    }, false);
+
+    document.addEventListener('gesturestart', function (e) {
+      e.preventDefault();
+    });
+
     const planData = [
       {
         dayId: "LUNES",
