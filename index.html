@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Entrenamiento Ariadna Fassa</title>
+  
+  <!-- Icono para la pantalla de inicio de iOS -->
+  <link rel="apple-touch-icon" href="Icono deportivo con figura en movimiento.png">
+  <link rel="shortcut icon" href="Icono deportivo con figura en movimiento.png">
+  
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  
+  <style>
+    body { -webkit-tap-highlight-color: transparent; user-select: none; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 font-sans min-h-screen flex flex-col justify-between selection:bg-yellow-500 selection:text-slate-900">
+
+  <!-- CABECERA PRINCIPAL -->
+  <header class="bg-slate-800/90 backdrop-blur border-b border-slate-700 sticky top-0 z-30 px-4 py-3 flex items-center justify-between shadow-lg">
+    <div class="flex items-center space-x-3">
+      <div class="w-10 h-10 rounded-full border-2 border-yellow-400 overflow-hidden bg-slate-700 flex-shrink-0">
+        <img src="Icono deportivo con figura en movimiento.png" alt="Ariadna Fassa" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/40?text=AF'">
+      </div>
+      <div>
+        <h1 class="text-base font-bold text-white leading-tight flex items-center gap-1">
+          <span id="athleteName">Ariadna Fassa</span>
+          <button onclick="editName()" class="text-xs text-yellow-400 opacity-75 hover:opacity-100">✏️</button>
+        </h1>
+        <p class="text-xs text-yellow-400 font-medium">Softbol 2026-2027</p>
+      </div>
+    </div>
+    
+    <div class="flex items-center space-x-2">
+      <select id="weekSelector" onchange="changeWeek(this.value)" class="bg-slate-700 border border-slate-600 text-yellow-300 font-semibold text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:border-yellow-400">
+        <option value="1">Semana 1 (Base)</option>
+        <option value="2">Semana 2 (+3-5)</option>
+        <option value="3">Semana 3 (+3-5)</option>
+        <option value="4">Semana 4 (+3-5)</option>
+        <option value="5">Semana 5 (+3-5)</option>
+        <option value="6">Semana 6 (Máx)</option>
+      </select>
+      <button onclick="openGlosario()" class="p-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-slate-200 text-sm">📖</button>
+      <button onclick="exportToExcel()" class="p-2 bg-green-600 hover:bg-green-500 text-white font-bold rounded-lg text-xs flex items-center gap-1 shadow">📊</button>
+    </div>
+  </header>
+
+  <!-- CONTENIDO PRINCIPAL: VISTA DASHBOARD O PASO A PASO -->
+  <main class="flex-1 p-4 max-w-md mx-auto w-full pb-20">
+
+    <!-- VISTA 1: DASHBOARD GENERAL (SEMANAL COMPLETO) -->
+    <div id="dashboardView" class="space-y-4">
+      
+      <!-- TARJETA DE FECHA Y PROGRESO GENERAL -->
+      <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700 shadow-sm flex items-center justify-between">
+        <div>
+          <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Fecha Actual</span>
+          <p id="currentDateStr" class="text-sm font-bold text-white"></p>
+        </div>
+        <div class="text-right">
+          <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Completado Hoy</span>
+          <p id="todayProgressStr" class="text-base font-extrabold text-yellow-400">0%</p>
+        </div>
+      </div>
+
+      <div class="flex justify-between items-center px-1">
+        <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400">Plan de Entrenamiento Semanal</h2>
+        <button onclick="clearCurrentDayLogs()" class="text-xs text-red-400 hover:underline">Resetear Hoy</button>
+      </div>
+
+      <!-- LISTA DE LOS 5 DÍAS DE LA SEMANA -->
+      <div id="daysList" class="space-y-3">
+        <!-- Generado dinámicamente con JS (Lunes a Viernes) -->
+      </div>
+    </div>
+
+    <!-- VISTA 2: MODO PASO A PASO EN VIVO -->
+    <div id="stepView" class="hidden space-y-4">
+      <div class="flex items-center justify-between bg-slate-800/80 p-3 rounded-xl border border-slate-700">
+        <button onclick="showDashboard()" class="text-xs font-semibold text-yellow-400 flex items-center gap-1">
+          ← Volver a la lista
+        </button>
+        <span id="stepProgressTag" class="text-xs font-bold text-slate-300">Paso 1 de 4</span>
+      </div>
+
+      <div class="bg-slate-800 rounded-2xl p-5 border border-slate-700 shadow-xl space-y-4">
+        <div class="flex justify-between items-start">
+          <div>
+            <span id="stepCategory" class="text-xs font-bold text-yellow-400 uppercase tracking-wide">CALENTAMIENTO</span>
+            <h3 id="stepTitle" class="text-xl font-black text-white mt-0.5">Movilidad + ABC</h3>
+          </div>
+          <span id="stepDuration" class="px-2.5 py-1 bg-slate-700 text-yellow-300 text-xs font-bold rounded-full">15-20 min</span>
+        </div>
+
+        <!-- ILUSTRACIÓN / GRÁFICO SVG -->
+        <div id="stepGraphic" class="w-full h-40 bg-slate-900 rounded-xl flex items-center justify-center p-3 border border-slate-700/50">
+          <!-- SVG dinámico -->
+        </div>
+
+        <!-- EXPLICACIÓN PASO A PASO -->
+        <div class="space-y-2">
+          <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">¿Cómo realizarlo bien?</h4>
+          <p id="stepDescription" class="text-sm text-slate-200 leading-relaxed"></p>
+        </div>
+
+        <!-- OBJETIVO DE LA SEMANA SELECCIONADA -->
+        <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-700 flex items-center justify-between">
+          <span class="text-xs font-semibold text-slate-400">Objetivo Semana <span class="currentWeekNum">1</span>:</span>
+          <span id="stepTarget" class="text-sm font-bold text-yellow-400">15 reps</span>
+        </div>
+
+        <!-- PAUSA RECOMENDADA -->
+        <div id="stepRestBox" class="bg-blue-950/40 border border-blue-800/50 p-3 rounded-xl text-xs text-blue-200 flex items-center gap-2">
+          <span>⏱️</span>
+          <span id="stepRestText">Descanso: 30 a 45 segundos entre series.</span>
+        </div>
+      </div>
+
+      <!-- BOTONES DE NAVEGACIÓN PASO A PASO -->
+      <div class="flex gap-2">
+        <button onclick="prevStep()" class="flex-1 py-3.5 bg-slate-800 border border-slate-700 text-slate-300 font-bold rounded-xl text-sm active:scale-95 transition">Anterior</button>
+        <button id="toggleCompleteBtn" onclick="toggleCurrentStep()" class="flex-1 py-3.5 bg-yellow-500 text-slate-950 font-black rounded-xl text-sm shadow-lg active:scale-95 transition">✓ Marcar Hecho</button>
+        <button onclick="nextStep()" class="flex-1 py-3.5 bg-slate-800 border border-slate-700 text-slate-300 font-bold rounded-xl text-sm active:scale-95 transition">Siguiente</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- MODAL DE GLOSARIO -->
+  <div id="glosarioModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-end justify-center">
+    <div class="bg-slate-800 w-full max-w-md rounded-t-3xl max-h-[85vh] flex flex-col p-5 border-t border-slate-700">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">📖 Glosario de Softbol</h3>
+        <button onclick="closeGlosario()" class="text-slate-400 hover:text-white font-bold p-1">✕</button>
+      </div>
+      <div id="glosarioContent" class="overflow-y-auto space-y-3 pr-1 text-sm">
+        <!-- Contenido dinámico del glosario -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // DATOS DE LA RUTINA Y PROGRAMACIÓN DE ARIADNA FASSA
+    const planData = [
+      {
+        dayId: "LUNES",
+        title: "LUNES: Fuerza Base & Técnica",
+        blocks: [
+          { id: "L1", cat: "Calentamiento", title: "Movilidad + ABC + Brazo", time: "15-20 min", targetKey: "base", desc: "Movilidad articular completa. Carrera suave. ABC Atletismo (skipping, talones). Estiramiento activo sin ligas. Calentamiento de brazo en pareja.", rest: "5 min descanso al terminar antes de defensa.", icon: "run" },
+          { id: "L2", cat: "Defensa", title: "Fildeo Corta Distancia + Tiro", time: "30-45 min", targetKey: "base", desc: "Fildeo a corta distancia para pulir técnica con tiro a base o deshacerse rápido de bola. Fildeo de frente agachada.", rest: "5 min hidratación.", icon: "field" },
+          { id: "L3", cat: "Ataque", title: "Home a 1ª + Tee + Toss", time: "60-90 min", targetKey: "tee", desc: "Carreras esprint Home a 1ª base con rolling por infield. Tee (2x10), Front toss (2x10) y bateo libre en terreno.", rest: "1 min entre series de bateo.", icon: "bat" },
+          { id: "L4", cat: "Físico", title: "Rutina de Fuerza Base", time: "20-30 min", targetKey: "squat", desc: "Sentadillas normales (planta apoyada), planchas de brazos, planchas con compañero, zancadas largas, saltos pliométricos y abdominales.", rest: "30-45 seg entre ejercicios.", icon: "gym" }
+        ]
+      },
+      {
+        dayId: "MARTES",
+        title: "MARTES: Explosividad & Fildeo Lateral",
+        blocks: [
+          { id: "M1", cat: "Calentamiento", title: "Movilidad + Juego + Brazo", time: "15-20 min", targetKey: "base", desc: "Movilidad articular, carrera suave, ABC Atletismo, juego motivacional y calentamiento del brazo en pareja.", rest: "5 min hidratación.", icon: "run" },
+          { id: "M2", cat: "Defensa", title: "Fildeo Lateral + Flys atrás", time: "30-45 min", targetKey: "base", desc: "Fildeo hacia el lado de la mano del guante con tiro a base. Fildeo de flys hacia atrás corriendo de espaldas.", rest: "5 min descanso.", icon: "field" },
+          { id: "M3", cat: "Ataque", title: "Home a 1ª (Hit der.) + Bateo", time: "60-90 min", targetKey: "tee", desc: "Esprints Home a 1ª simulando hit a jardín derecho. Trabajo técnico completo en Tee, Toss y terreno.", rest: "1 min entre series.", icon: "bat" },
+          { id: "M4", cat: "Físico", title: "Fuerza Explosiva & Saltos", time: "20-30 min", targetKey: "squatJump", desc: "Sentadillas con salto explosivo, planchas normales y con compañero, zancadas y 50 abdominales.", rest: "45 seg entre ejercicios.", icon: "gym" }
+        ]
+      },
+      {
+        dayId: "MIÉRCOLES",
+        title: "MIÉRCOLES: Resistencia & Agilidad",
+        blocks: [
+          { id: "X1", cat: "Calentamiento", title: "Movilidad + ABC Atletismo", time: "15-20 min", targetKey: "base", desc: "Movilidad articular completa, carreritas suaves, ABC Atletismo (6-20m) y soltar brazo en pareja.", rest: "5 min descanso.", icon: "run" },
+          { id: "X2", cat: "Defensa", title: "Fildeo Corta + Mano Tiro", time: "30-45 min", targetKey: "base", desc: "Fildeo a corta distancia + fildeo hacia el lado de la mano de tiro ajustando pies para lanzar.", rest: "5 min descanso.", icon: "field" },
+          { id: "X3", cat: "Ataque", title: "Home a 1ª (Hit central) + Bateo", time: "60-90 min", targetKey: "tee", desc: "Carrera Home a 1ª simulando hit al centro. Trabajo técnico estándar en Tee, Toss y terreno de juego.", rest: "1 min entre series.", icon: "bat" },
+          { id: "X4", cat: "Físico", title: "Escalera Agilidad + 800m", time: "25-35 min", targetKey: "run800", desc: "Pasos rápidos de pies en la escalera de agilidad (6 reps), Resistencia Aerobia (800 metros a ritmo) y 50 abdominales.", rest: "Pasos fluidos sin fatigarse al extremo.", icon: "ladder" }
+        ]
+      },
+      {
+        dayId: "JUEVES",
+        title: "JUEVES: Técnica & Recuperación",
+        blocks: [
+          { id: "J1", cat: "Calentamiento", title: "Movilidad + ABC + Brazo", time: "15-20 min", targetKey: "base", desc: "Movilidad articular completa, carrera constante suave y calentamiento gradual del brazo.", rest: "5 min descanso.", icon: "run" },
+          { id: "J2", cat: "Defensa", title: "Fildeo Guante + Flys Atrás", time: "30-45 min", targetKey: "base", desc: "Repaso de fildeo lateral hacia lado del guante y atrapar elevados intensos que van a las espaldas.", rest: "5 min descanso.", icon: "field" },
+          { id: "J3", cat: "Ataque", title: "Home a 1ª + Bateo Preparado", time: "60-90 min", targetKey: "tee", desc: "Carrera Home a 1ª con hit a jardín derecho. Repetir secuencia de bateo en Tee, Toss y terreno.", rest: "1 min entre series.", icon: "bat" },
+          { id: "J4", cat: "Físico", title: "Fuerza + 4x200m Suave", time: "25-30 min", targetKey: "run200", desc: "Misma rutina de fuerza del Martes + 4 tramos cortos de 200m a trote regenerativo (para eliminar toxinas) + 50 abdominales.", rest: "Trote muy suave sin prisa.", icon: "gym" }
+        ]
+      },
+      {
+        dayId: "VIERNES",
+        title: "VIERNES: Juego de Habilidad & Velocidad",
+        blocks: [
+          { id: "V1", cat: "Calentamiento", title: "Movilidad + ABC Atletismo", time: "15-20 min", targetKey: "base", desc: "Movilidad articular completa, carreritas suaves y acondicionamiento del brazo.", rest: "5 min descanso.", icon: "run" },
+          { id: "V2", cat: "Defensa", title: "Trabajo en Equipo (Infield)", time: "30 min", targetKey: "base", desc: "Desplazamientos y coordinación de equipo dentro del cuadro para pulir posiciones.", rest: "5 min descanso.", icon: "field" },
+          { id: "V3", cat: "Ataque / Juego", title: "Juego de Habilidad (3 Innings)", time: "60 min", targetKey: "base", desc: "Juego simulado de 3 entradas completas. El entrenador lanza la pelota para situaciones reales.", rest: "Según dinámica de juego.", icon: "bat" },
+          { id: "V4", cat: "Físico", title: "Velocidad 6x30m + Escalera", time: "20 min", targetKey: "sprint", desc: "Esprints puros de velocidad (6 reps de 30m), trabajo dinámico en escalera de agilidad, saltos pliométricos y abdominales.", rest: "Descansar bien entre carreras de velocidad.", icon: "ladder" }
+        ]
+      }
+    ];
+
+    const targetsByWeek = {
+      1: { squat: "15 reps", squatJump: "20 seg", tee: "2x10 reps", run800: "800 m", sprint: "6 reps 30m", run200: "4x200m trote", base: "Completo" },
+      2: { squat: "18 reps", squatJump: "25 seg", tee: "2x12 reps", run800: "900 m", sprint: "7 reps 30m", run200: "4x200m trote", base: "Completo" },
+      3: { squat: "20 reps", squatJump: "25 seg", tee: "2x15 reps", run800: "1000 m", sprint: "8 reps 30m", run200: "4x200m trote", base: "Completo" },
+      4: { squat: "23 reps", squatJump: "30 seg", tee: "3x10 reps", run800: "1100 m", sprint: "8 reps 30m", run200: "4x200m trote", base: "Completo" },
+      5: { squat: "25 reps", squatJump: "30 seg", tee: "3x12 reps", run800: "1200 m", sprint: "10 reps 30m", run200: "4x200m trote", base: "Completo" },
+      6: { squat: "25 reps (Máx)", squatJump: "30 seg", tee: "3x15 reps", run800: "1200 m", sprint: "10 reps 30m", run200: "4x200m trote", base: "Completo" }
+    };
+
+    const glosarioList = [
+      { t: "Escalera de agilidad", desc: "Estructura de cinta plana en el suelo para hacer pasos rápidos de pies sin pisar los peldaños. Mejora la velocidad de reacción." },
+      { t: "Movilidad articular", desc: "Rotación suave de articulaciones (cuello, hombros, cadera, rodillas) de arriba a abajo antes de correr." },
+      { t: "ABC del Atletismo", desc: "Ejercicios de técnica de carrera (6-20m) como skipping con rodillas arriba, talones a glúteos y laterales." },
+      { t: "Front Toss", desc: "Lanzamientos suaves de frente (detrás de red) a la zona de strike para practicar la mecánica de golpeo." },
+      { t: "Tee (T-Ball)", desc: "Soporte vertical donde se coloca la pelota quieta a la altura de la cintura para entrenar la postura de bateo." },
+      { t: "Fildeo", desc: "Acción de atrapar o recoger la bola (de rodado o aire) con el guante flexionando bien las rodillas." },
+      { t: "Fly atrás", desc: "Atrapar pelotas altas que caen a las espaldas de la jugadora corriendo hacia atrás." }
+    ];
+
+    // ESTADO GLOBAL DE LA APP
+    let currentWeek = parseInt(localStorage.getItem("ari_week") || "1");
+    let athleteName = localStorage.getItem("ari_name") || "Ariadna Fassa";
+    let completedLog = JSON.parse(localStorage.getItem("ari_log") || "{}");
+    let dailyNotes = JSON.parse(localStorage.getItem("ari_notes") || "{}");
+    
+    let activeDayIndex = 0;
+    let activeStepIndex = 0;
+
+    // FECHA ACTUAL FORMATO YYYY-MM-DD
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("athleteName").innerText = athleteName;
+      document.getElementById("weekSelector").value = currentWeek;
+      document.getElementById("currentDateStr").innerText = new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' });
+      renderDashboard();
+      renderGlosario();
+    });
+
+    function editName() {
+      const n = prompt("Editar nombre de la deportista:", athleteName);
+      if (n && n.trim()) {
+        athleteName = n.trim();
+        localStorage.setItem("ari_name", athleteName);
+        document.getElementById("athleteName").innerText = athleteName;
+      }
+    }
+
+    function changeWeek(val) {
+      currentWeek = parseInt(val);
+      localStorage.setItem("ari_week", currentWeek);
+      document.querySelectorAll(".currentWeekNum").forEach(el => el.innerText = currentWeek);
+      renderDashboard();
+    }
+
+    // RENDIRIZAR DASHBOARD COMPLETO (LOS 5 DÍAS DE LA SEMANA)
+    function renderDashboard() {
+      const container = document.getElementById("daysList");
+      container.innerHTML = "";
+
+      let totalBlocksToday = 0;
+      let completedToday = 0;
+
+      planData.forEach((day, dIdx) => {
+        let dayDone = 0;
+        day.blocks.forEach(b => {
+          const key = `${todayStr}_${b.id}`;
+          if (completedLog[key]) dayDone++;
+        });
+
+        if (dIdx === 0) { // Si es el primer día de la vista o el día actual
+          totalBlocksToday = day.blocks.length;
+          completedToday = dayDone;
+        }
+
+        const pct = Math.round((dayDone / day.blocks.length) * 100);
+
+        const card = document.createElement("div");
+        card.className = "bg-slate-800 rounded-2xl p-4 border border-slate-700 shadow-md space-y-3";
+
+        let blocksHtml = day.blocks.map(b => {
+          const isDone = !!completedLog[`${todayStr}_${b.id}`];
+          const target = targetsByWeek[currentWeek][b.targetKey] || "OK";
+          return `
+            <div onclick="toggleBlock('${b.id}')" class="flex items-center justify-between p-2.5 bg-slate-900/60 rounded-xl border border-slate-700/50 cursor-pointer active:bg-slate-700/50 transition">
+              <div class="flex items-center space-x-2.5">
+                <span class="w-5 h-5 rounded-md ${isDone ? 'bg-yellow-400 text-slate-950' : 'bg-slate-700 text-slate-500'} flex items-center justify-center font-black text-xs">
+                  ${isDone ? '✓' : ''}
+                </span>
+                <div>
+                  <p class="text-xs font-bold text-white ${isDone ? 'line-through text-slate-400' : ''}">${b.title}</p>
+                  <p class="text-[10px] text-slate-400">${b.cat} • ${b.time}</p>
+                </div>
+              </div>
+              <span class="text-[11px] font-semibold text-yellow-400 bg-yellow-400/10 px-2 py-0.5 rounded-md">${target}</span>
+            </div>
+          `;
+        }).join("");
+
+        const dayNote = dailyNotes[`${todayStr}_${day.dayId}`] || "";
+
+        card.innerHTML = `
+          <div class="flex items-center justify-between border-b border-slate-700/70 pb-2.5">
+            <div>
+              <h3 class="text-sm font-extrabold text-white">${day.title}</h3>
+              <p class="text-xs text-slate-400">${dayDone} de ${day.blocks.length} bloques completados</p>
+            </div>
+            <button onclick="startStepMode(${dIdx})" class="px-3 py-1.5 bg-yellow-400 hover:bg-yellow-300 text-slate-950 font-black text-xs rounded-xl shadow active:scale-95 transition">
+              ▶ Modo Guiado
+            </button>
+          </div>
+
+          <div class="space-y-1.5">${blocksHtml}</div>
+
+          <!-- NOTA LIBRE DEL DÍA -->
+          <div class="pt-1">
+            <input type="text" placeholder="✍️ Comentarios de Ariadna para este día..." 
+              value="${dayNote}" 
+              onchange="saveDayNote('${day.dayId}', this.value)"
+              class="w-full bg-slate-900 text-xs text-slate-200 border border-slate-700 rounded-xl px-3 py-2 focus:outline-none focus:border-yellow-400 placeholder:text-slate-500">
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      const todayPct = totalBlocksToday ? Math.round((completedToday / totalBlocksToday) * 100) : 0;
+      document.getElementById("todayProgressStr").innerText = `${todayPct}%`;
+    }
+
+    function toggleBlock(blockId) {
+      const key = `${todayStr}_${blockId}`;
+      completedLog[key] = !completedLog[key];
+      localStorage.setItem("ari_log", JSON.stringify(completedLog));
+      renderDashboard();
+    }
+
+    function saveDayNote(dayId, val) {
+      dailyNotes[`${todayStr}_${dayId}`] = val;
+      localStorage.setItem("ari_notes", JSON.stringify(dailyNotes));
+    }
+
+    function clearCurrentDayLogs() {
+      if (confirm("¿Quieres borrar los registros completados de hoy?")) {
+        planData.forEach(d => {
+          d.blocks.forEach(b => {
+            delete completedLog[`${todayStr}_${b.id}`];
+          });
+          delete dailyNotes[`${todayStr}_${d.dayId}`];
+        });
+        localStorage.setItem("ari_log", JSON.stringify(completedLog));
+        localStorage.setItem("ari_notes", JSON.stringify(dailyNotes));
+        renderDashboard();
+      }
+    }
+
+    // MODAL DE PASO A PASO
+    function startStepMode(dayIndex) {
+      activeDayIndex = dayIndex;
+      activeStepIndex = 0;
+      document.getElementById("dashboardView").classList.add("hidden");
+      document.getElementById("stepView").classList.remove("hidden");
+      renderStep();
+    }
+
+    function showDashboard() {
+      document.getElementById("stepView").classList.add("hidden");
+      document.getElementById("dashboardView").classList.remove("hidden");
+      renderDashboard();
+    }
+
+    function renderStep() {
+      const day = planData[activeDayIndex];
+      const block = day.blocks[activeStepIndex];
+      const totalSteps = day.blocks.length;
+
+      document.getElementById("stepProgressTag").innerText = `${day.dayId} • Paso ${activeStepIndex + 1} de ${totalSteps}`;
+      document.getElementById("stepCategory").innerText = block.cat;
+      document.getElementById("stepTitle").innerText = block.title;
+      document.getElementById("stepDuration").innerText = block.time;
+      document.getElementById("stepDescription").innerText = block.desc;
+      document.getElementById("stepRestText").innerText = block.rest;
+
+      const targetVal = targetsByWeek[currentWeek][block.targetKey] || "Completar rutina";
+      document.getElementById("stepTarget").innerText = targetVal;
+
+      const isDone = !!completedLog[`${todayStr}_${block.id}`];
+      const btn = document.getElementById("toggleCompleteBtn");
+      if (isDone) {
+        btn.innerText = "✓ Completado";
+        btn.className = "flex-1 py-3.5 bg-green-500 text-white font-black rounded-xl text-sm shadow-lg active:scale-95 transition";
+      } else {
+        btn.innerText = "Marcar Hecho";
+        btn.className = "flex-1 py-3.5 bg-yellow-500 text-slate-950 font-black rounded-xl text-sm shadow-lg active:scale-95 transition";
+      }
+
+      // SVG GRÁFICO DINÁMICO
+      document.getElementById("stepGraphic").innerHTML = getSVGIcon(block.icon);
+    }
+
+    function toggleCurrentStep() {
+      const day = planData[activeDayIndex];
+      const block = day.blocks[activeStepIndex];
+      toggleBlock(block.id);
+      renderStep();
+    }
+
+    function nextStep() {
+      const day = planData[activeDayIndex];
+      if (activeStepIndex < day.blocks.length - 1) {
+        activeStepIndex++;
+        renderStep();
+      } else {
+        alert("¡Has llegado al final de los ejercicios de este día!");
+      }
+    }
+
+    function prevStep() {
+      if (activeStepIndex > 0) {
+        activeStepIndex--;
+        renderStep();
+      }
+    }
+
+    // EXPORTACIÓN A EXCEL (.XLSX)
+    function exportToExcel() {
+      const rows = [];
+      rows.push(["HISTORIAL DE ENTRENAMIENTO - ARIADNA FASSA"]);
+      rows.push(["Fecha Exportación:", new Date().toLocaleDateString()]);
+      rows.push([]);
+      rows.push(["Fecha", "Semana", "Día", "Bloque / Categoría", "Ejercicio", "Objetivo Teórico", "Estado", "Comentarios de Ariadna"]);
+
+      planData.forEach(d => {
+        d.blocks.forEach(b => {
+          const key = `${todayStr}_${b.id}`;
+          const isDone = !!completedLog[key];
+          const target = targetsByWeek[currentWeek][b.targetKey] || "OK";
+          const note = dailyNotes[`${todayStr}__${d.dayId}`] || "";
+
+          rows.push([
+            todayStr,
+            `Semana ${currentWeek}`,
+            d.dayId,
+            b.cat,
+            b.title,
+            target,
+            isDone ? "COMPLETADO" : "PENDIENTE",
+            note
+          ]);
+        });
+      });
+
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Historial_Entrenamiento");
+      XLSX.writeFile(wb, `Entrenamiento_Ariadna_Fassa_${todayStr}.xlsx`);
+    }
+
+    // GLOSARIO MODAL
+    function renderGlosario() {
+      const c = document.getElementById("glosarioContent");
+      c.innerHTML = glosarioList.map(g => `
+        <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-700/60">
+          <h4 class="font-bold text-yellow-400 text-xs uppercase">${g.t}</h4>
+          <p class="text-xs text-slate-300 mt-1 leading-relaxed">${g.desc}</p>
+        </div>
+      `).join("");
+    }
+
+    function openGlosario() { document.getElementById("glosarioModal").classList.remove("hidden"); }
+    function closeGlosario() { document.getElementById("glosarioModal").classList.add("hidden"); }
+
+    // ICONOS SVG VECTORIALES DEPORTIVOS
+    function getSVGIcon(type) {
+      if (type === "run") {
+        return `<svg class="w-20 h-20 text-yellow-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 4a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM6 14l3-3 3 2 4-4M9 22l2-8 3 1 2 5M4 10l4-1"/></svg>`;
+      } else if (type === "field") {
+        return `<svg class="w-20 h-20 text-yellow-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/></svg>`;
+      } else if (type === "bat") {
+        return `<svg class="w-20 h-20 text-yellow-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 20l14-14M16 4l4 4"/><circle cx="5" cy="19" r="1"/></svg>`;
+      } else if (type === "gym") {
+        return `<svg class="w-20 h-20 text-yellow-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12h20M6 8v8M18 8v8M4 9v6M20 9v6"/></svg>`;
+      } else {
+        return `<svg class="w-20 h-20 text-yellow-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v20M16 2v20M8 6h8M8 12h8M8 18h8"/></svg>`;
+      }
+    }
+  </script>
+</body>
+</html>
