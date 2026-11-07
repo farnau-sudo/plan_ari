@@ -5,10 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Entrenamiento Ariadna Fassa</title>
   
-  <!-- Icono de iOS incrustado en Base64 para garantía total -->
-  <link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEAAQMAAABmvDolAAAABlBMVEUAAABTU1Oqqqrs8P4dAAAAAXRSTlMAQObYZgAAAFpJREFUeNrtwQENAAAAwqD3T20ON6AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8G8b0AAB30U7bAAAAABJRU5ErkJggg==" id="embeddedIcon">
+  <!-- Icono para la pantalla de inicio de iOS -->
+  <link rel="apple-touch-icon" sizes="180x180" href="icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="icon.png">
+  <link rel="shortcut icon" href="icon.png">
   
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Ari Softbol">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   
   <script src="https://cdn.tailwindcss.com"></script>
@@ -31,8 +34,8 @@
   <!-- CABECERA PRINCIPAL -->
   <header class="bg-slate-800/90 backdrop-blur border-b border-slate-700 sticky top-0 z-30 px-4 py-3 flex items-center justify-between shadow-lg">
     <div class="flex items-center space-x-3">
-      <div class="w-10 h-10 rounded-full border-2 border-yellow-400 overflow-hidden bg-slate-700 flex-shrink-0 flex items-center justify-center font-bold text-yellow-400">
-        AF
+      <div class="w-10 h-10 rounded-full border-2 border-yellow-400 overflow-hidden bg-slate-700 flex-shrink-0">
+        <img src="icon.png" alt="Ariadna Fassa" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/40?text=AF'">
       </div>
       <div>
         <h1 class="text-base font-bold text-white leading-tight flex items-center gap-1">
@@ -80,10 +83,8 @@
         <button onclick="clearCurrentDayLogs()" class="text-xs text-red-400 hover:underline">Resetear Hoy</button>
       </div>
 
-      <!-- LISTA DE LOS 5 DÍAS DE LA SEMANA -->
-      <div id="daysList" class="space-y-3">
-        <!-- Generado dinámicamente con JS (Lunes a Viernes) -->
-      </div>
+      <!-- LISTA DE DÍAS -->
+      <div id="daysList" class="space-y-3"></div>
     </div>
 
     <!-- VISTA 2: MODO PASO A PASO EN VIVO -->
@@ -106,7 +107,7 @@
 
         <!-- ILUSTRACIÓN / GRÁFICO SVG -->
         <div id="stepGraphic" class="w-full h-40 bg-slate-900 rounded-xl flex items-center justify-center p-3 border border-slate-700/50">
-          <!-- SVG dinámico -->
+          <!-- SVG dinámico corregido sin brazos extra -->
         </div>
 
         <!-- EXPLICACIÓN PASO A PASO -->
@@ -144,14 +145,12 @@
         <h3 class="text-base font-bold text-white flex items-center gap-2">📖 Glosario de Softbol</h3>
         <button onclick="closeGlosario()" class="text-slate-400 hover:text-white font-bold p-1">✕</button>
       </div>
-      <div id="glosarioContent" class="overflow-y-auto space-y-3 pr-1 text-sm">
-        <!-- Contenido dinámico del glosario -->
-      </div>
+      <div id="glosarioContent" class="overflow-y-auto space-y-3 pr-1 text-sm"></div>
     </div>
   </div>
 
   <script>
-    // BLOQUEO DE ZOOM TÁCTIL
+    // BLOQUEO DE GESTOS DE ZOOM TÁCTIL
     let lastTouchEnd = 0;
     document.addEventListener('touchend', function (event) {
       const now = (new Date()).getTime();
@@ -479,9 +478,10 @@
     function openGlosario() { document.getElementById("glosarioModal").classList.remove("hidden"); }
     function closeGlosario() { document.getElementById("glosarioModal").classList.add("hidden"); }
 
+    // SVG CORREGIDO (Figura de corredor limpia sin superposición de extremidades)
     function getSVGIcon(type) {
       if (type === "run") {
-        return `<svg class="w-20 h-20 text-yellow-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 4a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM6 14l3-3 3 2 4-4M9 22l2-8 3 1 2 5M4 10l4-1"/></svg>`;
+        return `<svg class="w-20 h-20 text-yellow-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4" r="2"/><path d="M7 21l3-7 3 2 4-5"/><path d="M12 12l-2-3 4-3"/></svg>`;
       } else if (type === "field") {
         return `<svg class="w-20 h-20 text-yellow-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/></svg>`;
       } else if (type === "bat") {
